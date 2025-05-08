@@ -565,7 +565,7 @@ window.onload = function() {
         if (messageDiv) {
             messageDiv.classList.remove('hidden');
             if (restartButton) restartButton.classList.remove('hidden');
-
+            
             if (messageText) {
                 if (win) {
                     messageText.textContent = 'Je hebt gewonnen! Score: ' + score;
@@ -586,7 +586,7 @@ window.onload = function() {
         backgroundCanvas.width = GAME_WIDTH;
         backgroundCanvas.height = GAME_HEIGHT;
         const bgCtx = backgroundCanvas.getContext('2d');
-
+        
         // Laad en teken de foto als achtergrond
         loadCityBgImage(function() {
             // Optioneel: blur toepassen als ondersteund
@@ -597,9 +597,9 @@ window.onload = function() {
             bgCtx.filter = 'none';
             // Leg een semi-transparant wit vlak over de afbeelding
             bgCtx.fillStyle = 'rgba(255,255,255,0.65)';
-            bgCtx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+        bgCtx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
         });
-
+        
         return backgroundCanvas;
     }
     
@@ -694,17 +694,72 @@ window.onload = function() {
         
         // If ball is on paddle, show launch instruction
         if (ballOnPaddle && gameRunning) {
-            ctx.fillStyle = '#333';
-            ctx.font = '16px sans-serif';
-            ctx.textAlign = 'center';
-            // Tekst onder de blokkenrijen tonen, met extra marge
+            // Pokemon-style text effect
+            ctx.save();
+            
+            // Position text below blocks with extra margin
             const rows = 7;
             const blockHeight = 24;
             const vSpacing = 20;
             const marginY = 48;
             const blocksBottom = marginY + rows * (blockHeight + vSpacing) - vSpacing;
-            const textY = blocksBottom + 60;
-            ctx.fillText('Druk op spatiebalk om te beginnen', GAME_WIDTH / 2, textY);
+            const textY = blocksBottom + 80;
+            
+            // Check if device is mobile
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const instructionText = isMobile ? 
+                'DRUK OP START OM TE BEGINNEN!' : 
+                'DRUK OP SPATIE OM TE BEGINNEN!';
+            
+            // Draw background
+            ctx.font = 'bold 28px "Fredoka One", Arial Rounded MT Bold, Arial, sans-serif';
+            const textWidth = ctx.measureText(instructionText).width;
+            const padding = 20;
+            
+            // Draw semi-transparent background
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.strokeStyle = '#c61f3e';
+            ctx.lineWidth = 3;
+            
+            // Rounded rectangle background
+            const x = GAME_WIDTH / 2 - textWidth / 2 - padding;
+            const y = textY - 35;
+            const width = textWidth + padding * 2;
+            const height = 50;
+            const radius = 10;
+            
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            
+            ctx.fill();
+            ctx.stroke();
+            
+            // Glow effect
+            ctx.shadowColor = '#c61f3e';
+            ctx.shadowBlur = 15;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            
+            // Main text
+            ctx.fillStyle = '#003366';
+            ctx.textAlign = 'center';
+            
+            // Draw text with outline
+            ctx.strokeStyle = '#c61f3e';
+            ctx.lineWidth = 4;
+            ctx.strokeText(instructionText, GAME_WIDTH / 2, textY);
+            ctx.fillText(instructionText, GAME_WIDTH / 2, textY);
+            
+            ctx.restore();
         }
     }
     
@@ -721,13 +776,13 @@ window.onload = function() {
         
         // Titel
         ctx.fillStyle = '#c61f3e'; // Utrecht rood
-        ctx.font = 'bold 40px sans-serif';
+        ctx.font = 'bold 40px "Fredoka One", Arial Rounded MT Bold, Arial, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('Utrecht Breakout Challenge', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50);
         
         // Instructies
-        ctx.fillStyle = '#333';
-        ctx.font = '20px sans-serif';
+        ctx.fillStyle = '#003366'; // Utrecht blauw
+        ctx.font = '20px "Fredoka One", Arial Rounded MT Bold, Arial, sans-serif';
         ctx.fillText('Klik op Start Spel om te beginnen', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 20);
         ctx.fillText('Gebruik de muis om de paddle te bewegen', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 50);
         ctx.fillText('Druk op spatiebalk om de bal te lanceren', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 80);

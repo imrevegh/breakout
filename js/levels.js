@@ -78,7 +78,7 @@ class LevelManager {
                 blocks.push(this.createBlock(x, y, type, color, scaledBlockWidth, blockHeight, gevelHeight));
             }
         }
-
+        
         return {
             blocks: blocks,
             bicycles: [],
