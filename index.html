@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utrecht Breakout Challenge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #c61f3e; /* Utrecht red */
+            --secondary-color: #384a60; /* Dark blue */
+            --background-light: #f5f5f5;
+            --background-dark: #1a1a1a;
+            --text-light: #333;
+            --text-dark: #f5f5f5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-light);
+            color: var(--text-light);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            background-color: var(--background-dark);
+            color: var(--text-dark);
+        }
+
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-header {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #a31a33; /* Darker red */
+        }
+
+        #gameCanvas {
+            background-color: #fff;
+            display: block;
+            margin: 0 auto;
+            border: 2px solid var(--secondary-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode #gameCanvas {
+            background-color: #2c2c2c;
+            border-color: var(--primary-color);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #game-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+
+        body.dark-mode #game-message {
+            background-color: rgba(42, 42, 42, 0.9);
+        }
+
+        #game-message h2 {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .game-instructions {
+            margin-top: 20px;
+            text-align: center;
+            max-width: 600px;
+        }
+
+        .game-instructions h3 {
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+        }
+
+        .game-instructions p {
+            margin-bottom: 10px;
+        }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: var(--secondary-color);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--secondary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        .slider.round {
+            border-radius: 24px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 10px;
+            }
+            
+            .game-info {
+                font-size: 1rem;
+            }
+            
+            .game-controls {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            #gameCanvas {
+                width: 100% !important;
+                height: auto !important;
+            }
+            
+            button {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>Utrecht Breakout</h1>
+            <div class="game-info">
+                <span class="score">Score: <span id="score">0</span></span>
+                <span class="lives">Levens: <span id="lives">3</span></span>
+            </div>
+            <div class="game-controls">
+                <button id="start-button">Start Spel</button>
+                <button id="restart-button" class="hidden">Opnieuw Spelen</button>
+                <div class="toggle-container">
+                    <label class="switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="toggle-label">🌙 / ☀️</span>
+                </div>
+                <button id="mute-button">🔊</button>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="game-message" class="hidden">
+            <h2 id="message-text"></h2>
+            <button id="message-button">Opnieuw Spelen</button>
+        </div>
+        
+        <div class="game-instructions">
+            <h3>Instructies:</h3>
+            <p>Gebruik de muis om de paddle te bewegen. Druk op spatiebalk om de bal te lanceren.</p>
+            <p>Breek alle Utrechtse panden en vermijd de fietsen!</p>
+            <p>De Domtoren geeft extra punten en stroopwafels maken je paddle groter.</p>
+        </div>
+    </div>
+    
+    <script>
+        // Sound Manager
+        class SoundManager {
+            constructor() {
+                console.log('Initializing SoundManager...');
+                
+                // Create dummy audio objects for sounds that may not exist
+                this.sounds = {};
+                
+                try {
+                    // Try to create actual Audio objects, but with error handling
+                    const soundFiles = {
+                        hit: 'sounds/hit.mp3',
+                        powerup: 'sounds/powerup.mp3',
+                        lose: 'sounds/lose.mp3',
+                        win: 'sounds/win.mp3',
+                        background: 'sounds/background.mp3'
+                    };
+                    
+                    for (const [key, path] of Object.entries(soundFiles)) {
+                        try {
+                            this.sounds[key] = new Audio(path);
+                            
+                            // Handle loading errors for each sound
+                            this.sounds[key].onerror = () => {
+                                console.log(`Sound ${key} couldn't be loaded, creating dummy`);
+                                this.sounds[key] = this.createDummyAudio();
+                            };
+                        } catch (e) {
+                            console.log(`Failed to create Audio for ${key}: ${e.message}`);
+                            this.sounds[key] = this.createDummyAudio();
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error setting up sounds:', e);
+                    // Create dummy sound objects if anything goes wrong
+                    this.sounds = {
+                        hit: this.createDummyAudio(),
+                        powerup: this.createDummyAudio(),
+                        lose: this.createDummyAudio(),
+                        win: this.createDummyAudio(),
+                        background: this.createDummyAudio()
+                    };
+                }
+                
+                this.muted = false;
+                this.bgMusicStarted = false;
+                
+                // Try to initialize background music, but don't fail if it doesn't work
+                try {
+                    this.initBackgroundMusic();
+                } catch (e) {
+                    console.log('Failed to initialize background music:', e);
+                }
+                
+                console.log('SoundManager initialized');
+            }
+            
+            createDummyAudio() {
+                // Create a dummy audio object that doesn't do anything
+                return { 
+                    play: () => Promise.resolve(),
+                    pause: () => {},
+                    currentTime: 0,
+                    loop: false
+                };
+            }
+            
+            initBackgroundMusic() {
+                try {
+                    const bgMusic = this.sounds.background;
+                    bgMusic.loop = true;
+                    bgMusic.volume = 0.4;
+                    
+                    // Only start once user interacts with the page (to avoid autoplay restrictions)
+                    document.addEventListener('click', () => {
+                        try {
+                            if (!this.muted && !this.bgMusicStarted) {
+                                bgMusic.play()
+                                    .then(() => {
+                                        this.bgMusicStarted = true;
+                                        console.log('Background music started');
+                                    })
+                                    .catch(e => {
+                                        console.log('Background music autoplay prevented:', e);
+                                    });
+                            }
+                        } catch (e) {
+                            console.log('Error playing background music:', e);
+                        }
+                    }, { once: true });
+                } catch (e) {
+                    console.log('Error in initBackgroundMusic:', e);
+                }
+            }
+            
+            play(sound) {
+                try {
+                    if (this.muted) return;
+                    
+                    const soundObj = this.sounds[sound];
+                    if (!soundObj) return;
+                    
+                    // Reset sound to beginning if it's already playing
+                    soundObj.currentTime = 0;
+                    soundObj.play().catch(e => console.log(`Sound ${sound} couldn't play:`, e));
+                } catch (e) {
+                    console.log(`Error playing sound ${sound}:`, e);
+                }
+            }
+            
+            toggleMute() {
+                try {
+                    this.muted = !this.muted;
+                    
+                    if (this.muted) {
+                        for (const key in this.sounds) {
+                            try {
+                                this.sounds[key].pause();
+                            } catch (e) {
+                                console.log(`Error pausing ${key}:`, e);
+                            }
+                        }
+                    } else if (this.bgMusicStarted) {
+                        try {
+                            this.sounds.background.play().catch(e => {});
+                        } catch (e) {
+                            console.log('Error resuming background music:', e);
+                        }
+                    }
+                    
+                    return this.muted;
+                } catch (e) {
+                    console.log('Error in toggleMute:', e);
+                    return false;
+                }
+            }
+        }
+
+        // Create the global soundManager instance
+        try {
+            console.log('Creating SoundManager instance...');
+            window.soundManager = new SoundManager();
+            console.log('SoundManager instance created successfully');
+        } catch (e) {
+            console.error('Failed to create SoundManager:', e);
+            
+            // Create a dummy sound manager that doesn't do anything
+            window.soundManager = {
+                play: () => {},
+                toggleMute: () => false
+            };
+        }
+
+        // Level Manager
+        class LevelManager {
+            constructor(gameWidth, gameHeight) {
+                console.log('Initializing LevelManager...');
+                
+                this.gameWidth = gameWidth;
+                this.gameHeight = gameHeight;
+                this.currentLevel = 0;
+                
+                // Block types
+                this.blockTypes = {
+                    1: { // Regular canal house type 1
+                        image: 'images/canal-house1.svg',
+                        points: 10,
+                        hits: 1,
+                        color: '#e74c3c' // Red fallback
+                    },
+                    2: { // Regular canal house type 2
+                        image: 'images/canal-house2.svg',
+                        points: 15,
+                        hits: 1,
+                        color: '#3498db' // Blue fallback
+                    },
+                    3: { // Dom Tower (special block)
+                        image: 'images/domtower.svg',
+                        points: 50,
+                        hits: 2,
+                        color: '#95a5a6' // Gray fallback
+                    }
+                };
+                
+                // Create SVG fallbacks
+                this.defaultSvgs = {
+                    'canal-house1': this.createCanalHouseImage('#e74c3c'),
+                    'canal-house2': this.createCanalHouseImage('#3498db'),
+                    'domtower': this.createDomTowerImage(),
+                    'bicycle': this.createBicycleImage(),
+                    'stroopwafel': this.createStroopwafelImage(),
+                    'background': this.createBackgroundImage()
+                };
+                
+                // Try creating default images
+                try {
+                    this.createDefaultImages();
+                } catch (e) {
+                    console.error('Error creating default images:', e);
+                }
+                
+                console.log('LevelManager initialized');
+            }
+            
+            createDefaultImages() {
+                try {
+                    // Check if each image exists and use defaults if not
+                    for (const [key, svg] of Object.entries(this.defaultSvgs)) {
+                        try {
+                            // Create an in-memory blob URL for the SVG
+                            const blob = new Blob([svg], { type: 'image/svg+xml' });
+                            const url = URL.createObjectURL(blob);
+                            
+                            // Store the URL for later use
+                            this.defaultSvgs[key + 'Url'] = url;
+                            
+                            // Try loading the actual image file
+                            const img = new Image();
+                            img.src = `images/${key}.svg`;
+                            
+                            img.onerror = () => {
+                                console.log(`Image ${key}.svg not found, using generated fallback`);
+                                
+                                // Update block types if this is one of their images
+                                for (const typeKey in this.blockTypes) {
+                                    if (this.blockTypes[typeKey].image === `images/${key}.svg`) {
+                                        this.blockTypes[typeKey].defaultImageUrl = url;
+                                    }
+                                }
+                            };
+                        } catch (e) {
+                            console.error(`Error processing image ${key}:`, e);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error in createDefaultImages:', e);
+                }
+            }
+            
+            createCanalHouseImage(color) {
+                return `<svg width="60" height="40" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="15" width="50" height="25" fill="${color}" />
+                    <polygon points="5,15 30,0 55,15" fill="#7f8c8d" />
+                    <rect x="10" y="20" width="10" height="10" fill="#ecf0f1" />
+                    <rect x="25" y="20" width="10" height="10" fill="#ecf0f1" />
+                    <rect x="40" y="20" width="10" height="10" fill="#ecf0f1" />
+                    <rect x="20" y="30" width="20" height="10" fill="#34495e" />
+                </svg>`;
+            }
+            
+            createDomTowerImage() {
+                return `<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="20" y="10" width="20" height="50" fill="#bdc3c7" />
+                    <polygon points="20,10 30,0 40,10" fill="#7f8c8d" />
+                    <rect x="25" y="15" width="10" height="15" fill="#34495e" />
+                    <rect x="25" y="35" width="10" height="10" fill="#34495e" />
+                </svg>`;
+            }
+            
+            createBicycleImage() {
+                return `<svg width="50" height="30" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="10" cy="20" r="8" fill="none" stroke="#2c3e50" stroke-width="2" />
+                    <circle cx="40" cy="20" r="8" fill="none" stroke="#2c3e50" stroke-width="2" />
+                    <line x1="10" y1="20" x2="25" y2="10" stroke="#2c3e50" stroke-width="2" />
+                    <line x1="25" y1="10" x2="40" y2="20" stroke="#2c3e50" stroke-width="2" />
+                    <line x1="25" y1="10" x2="25" y2="20" stroke="#2c3e50" stroke-width="2" />
+                    <line x1="40" y1="20" x2="25" y2="20" stroke="#2c3e50" stroke-width="2" />
+                </svg>`;
+            }
+            
+            createStroopwafelImage() {
+                return `<svg width="30" height="30" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="15" cy="15" r="13" fill="#d35400" />
+                    <circle cx="15" cy="15" r="11" fill="#e67e22" />
+                    <line x1="5" y1="15" x2="25" y2="15" stroke="#d35400" stroke-width="1" />
+                    <line x1="15" y1="5" x2="15" y2="25" stroke="#d35400" stroke-width="1" />
+                    <line x1="7" y1="7" x2="23" y2="23" stroke="#d35400" stroke-width="1" />
+                    <line x1="7" y1="23" x2="23" y2="7" stroke="#d35400" stroke-width="1" />
+                </svg>`;
+            }
+            
+            createBackgroundImage() {
+                // Simple Utrecht cityscape silhouette
+                return `<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="800" height="600" fill="#f5f5f5" />
+                    <polygon points="0,400 50,400 50,350 75,350 75,370 100,350 125,370 150,350 175,360 200,330 225,350 250,320 275,350 300,340 325,360 350,320 400,320 400,310 425,280 450,300 500,270 510,290 525,260 550,290 575,270 600,300 625,320 650,280 675,310 700,290 725,310 750,280 775,300 800,290 800,400" fill="#bdc3c7" />
+                    <rect x="390" y="150" width="30" height="170" fill="#7f8c8d" />
+                    <polygon points="390,150 405,120 420,150" fill="#95a5a6" />
+                </svg>`;
+            }
+            
+            getCurrentLevel() {
+                try {
+                    // Calculate block dimensions for the level
+                    const blockWidth = 60;
+                    const blockHeight = 30;
+                    const padding = 10;
+                    
+                    // Calculate how many blocks we can fit in a row
+                    const blocksPerRow = Math.floor((this.gameWidth - padding * 2) / (blockWidth + padding));
+                    
+                    // Create the level layout
+                    const blocks = [];
+                    
+                    // Top rows - Monuments and special buildings
+                    for (let row = 0; row < 2; row++) {
+                        for (let col = 0; col < blocksPerRow; col++) {
+                            // Add Dom Towers (special blocks) in specific positions
+                            const blockType = (row === 0 && (col === 2 || col === blocksPerRow - 3)) ? 3 : 2;
+                            
+                            blocks.push({
+                                x: padding + col * (blockWidth + padding),
+                                y: padding + row * (blockHeight + padding),
+                                width: blockWidth,
+                                height: blockHeight,
+                                type: blockType,
+                                hits: this.blockTypes[blockType].hits,
+                                points: this.blockTypes[blockType].points
+                            });
+                        }
+                    }
+                    
+                    // Middle rows - Canal houses
+                    for (let row = 2; row < 5; row++) {
+                        for (let col = 0; col < blocksPerRow; col++) {
+                            // Alternate between canal house types
+                            const blockType = (col % 2 === 0) ? 1 : 2;
+                            
+                            blocks.push({
+                                x: padding + col * (blockWidth + padding),
+                                y: padding + row * (blockHeight + padding),
+                                width: blockWidth,
+                                height: blockHeight,
+                                type: blockType,
+                                hits: this.blockTypes[blockType].hits,
+                                points: this.blockTypes[blockType].points
+                            });
+                        }
+                    }
+                    
+                    return {
+                        blocks: blocks,
+                        bicycles: [], // Will be spawned during gameplay
+                        powerups: []  // Will be spawned when blocks are destroyed
+                    };
+                } catch (e) {
+                    console.error('Error generating level:', e);
+                    
+                    // Return a simple level if there's an error
+                    return {
+                        blocks: [
+                            {
+                                x: this.gameWidth / 2 - 30,
+                                y: 50,
+                                width: 60,
+                                height: 30,
+                                type: 3,
+                                hits: 2,
+                                points: 50
+                            }
+                        ],
+                        bicycles: [],
+                        powerups: []
+                    };
+                }
+            }
+            
+            getBlockImageForType(type) {
+                try {
+                    const blockData = this.blockTypes[type];
+                    if (blockData.defaultImageUrl) {
+                        return blockData.defaultImageUrl;
+                    }
+                    
+                    // If we don't have a default image URL, return the normal image path
+                    // The rendering code will handle missing images
+                    return blockData.image;
+                } catch (e) {
+                    console.log(`Error getting block image for type ${type}:`, e);
+                    return null;
+                }
+            }
+            
+            getPointsForBlockType(type) {
+                try {
+                    return this.blockTypes[type].points;
+                } catch (e) {
+                    console.log(`Error getting points for block type ${type}:`, e);
+                    return 10; // Default points
+                }
+            }
+        }
+
+        // Main Game Script
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Game script loading...'); // Debugging
+
+            // Game elements
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const startButton = document.getElementById('start-button');
+            const restartButton = document.getElementById('restart-button');
+            const messageDiv = document.getElementById('game-message');
+            const messageText = document.getElementById('message-text');
+            const messageButton = document.getElementById('message-button');
+            const scoreDisplay = document.getElementById('score');
+            const livesDisplay = document.getElementById('lives');
+            const muteButton = document.getElementById('mute-button');
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            console.log('Game elements loaded!'); // Debugging
+            
+            // Game constants
+            const GAME_WIDTH = 800;
+            const GAME_HEIGHT = 600;
+            const PADDLE_WIDTH = 100;
+            const PADDLE_HEIGHT = 15;
+            const PADDLE_MARGIN_BOTTOM = 30;
+            const BALL_RADIUS = 15;
+            const BALL_SPEED = 5;
+            const BICYCLE_SPEED = 3;
+            const POWERUP_SPEED = 2;
+            const POWERUP_DURATION = 10000; // 10 seconds
+            
+            // Set canvas dimensions
+            canvas.width = GAME_WIDTH;
+            canvas.height = GAME_HEIGHT;
+            
+            // Game state
+            let gameRunning = false;
+            let score = 0;
+            let lives = 3;
+            let ballOnPaddle = true;
+            let bicycleSpawnTimer = 0;
+            let powerupActive = false;
+            let powerupTimer = 0;
+
+            console.log('Creating game elements...'); // Debugging
+            
+            // Game objects
+            const levelManager = new LevelManager(GAME_WIDTH, GAME_HEIGHT);
+            let currentLevel = levelManager.getCurrentLevel();
+            
+            let paddle = {
+                x: GAME_WIDTH / 2 - PADDLE_WIDTH / 2,
+                y: GAME_HEIGHT - PADDLE_MARGIN_BOTTOM - PADDLE_HEIGHT,
+                width: PADDLE_WIDTH,
+                height: PADDLE_HEIGHT,
+                dx: 0,
+                originalWidth: PADDLE_WIDTH
+            };
+            
+            let ball = {
+                x: GAME_WIDTH / 2,
+                y: paddle.y - BALL_RADIUS,
+                radius: BALL_RADIUS,
+                speed: BALL_SPEED,
+                dx: 0,
+                dy: 0,
+                image: null
+            };
+            
+            console.log('Game objects created!'); // Debugging
+            
+            // Load ball image
+            function loadBallImage() {
+                try {
+                    ball.image = new Image();
+                    ball.image.src = 'images/head.png';
+                    
+                    // Fallback to a default ball if the image doesn't load
+                    ball.image.onerror = () => {
+                        console.log('Ball image could not be loaded. Using default ball.');
+                        ball.image = null;
+                    };
+                } catch (error) {
+                    console.error('Error loading ball image:', error);
+                    ball.image = null;
+                }
+            }
+            
+            // Create null background image (we'll render a fallback)
+            let backgroundImage = null;
+            try {
+                backgroundImage = new Image();
+                backgroundImage.src = 'images/background.svg';
+                backgroundImage.onerror = () => {
+                    console.log('Background image could not be loaded.');
+                    backgroundImage = null;
+                };
+            } catch (error) {
+                console.error('Error loading background image:', error);
+            }
+            
+            console.log('Setting up event listeners...'); // Debugging
+            
+            // Event listeners
+            canvas.addEventListener('mousemove', (e) => {
+                try {
+                    const relativeX = e.clientX - canvas.getBoundingClientRect().left;
+                    paddle.x = relativeX - paddle.width / 2;
+                    
+                    // Keep paddle within canvas bounds
+                    if (paddle.x < 0) {
+                        paddle.x = 0;
+                    } else if (paddle.x + paddle.width > GAME_WIDTH) {
+                        paddle.x = GAME_WIDTH - paddle.width;
+                    }
+                    
+                    // Move ball with paddle if it's on the paddle
+                    if (ballOnPaddle) {
+                        ball.x = paddle.x + paddle.width / 2;
+                    }
+                } catch (error) {
+                    console.error('Error in mousemove handler:', error);
+                }
+            });
+            
+            document.addEventListener('keydown', (e) => {
+                try {
+                    if (e.code === 'Space' && gameRunning && ballOnPaddle) {
+                        launchBall();
+                    }
+                } catch (error) {
+                    console.error('Error in keydown handler:', error);
+                }
+            });
+            
+            startButton.addEventListener('click', () => {
+                try {
+                    startGame();
+                } catch (error) {
+                    console.error('Error starting game:', error);
+                    showErrorMessage('Er is een fout opgetreden bij het starten van het spel. Probeer het opnieuw.');
+                }
+            });
+            
+            restartButton.addEventListener('click', () => {
+                try {
+                    restartGame();
+                } catch (error) {
+                    console.error('Error restarting game:', error);
+                    showErrorMessage('Er is een fout opgetreden bij het herstarten van het spel. Probeer het opnieuw.');
+                }
+            });
+            
+            messageButton.addEventListener('click', () => {
+                try {
+                    restartGame();
+                } catch (error) {
+                    console.error('Error restarting game from message:', error);
+                    showErrorMessage('Er is een fout opgetreden bij het herstarten van het spel. Probeer het opnieuw.');
+                }
+            });
+            
+            muteButton.addEventListener('click', () => {
+                try {
+                    const isMuted = soundManager.toggleMute();
+                    muteButton.textContent = isMuted ? '🔇' : '🔊';
+                } catch (error) {
+                    console.error('Error toggling mute:', error);
+                }
+            });
+            
+            themeToggle.addEventListener('change', () => {
+                try {
+                    document.body.classList.toggle('dark-mode');
+                } catch (error) {
+                    console.error('Error toggling theme:', error);
+                }
+            });
+            
+            function showErrorMessage(message) {
+                messageDiv.classList.remove('hidden');
+                messageText.textContent = message;
+            }
+            
+            console.log('Event listeners set up!'); // Debugging
+            
+            // Game functions
+            function startGame() {
+                console.log('Starting game...'); // Debugging
+                loadBallImage();
+                gameRunning = true;
+                startButton.classList.add('hidden');
+                restartButton.classList.remove('hidden');
+                messageDiv.classList.add('hidden');
+                resetGame();
+                gameLoop();
+                console.log('Game started!'); // Debugging
+            }
+            
+            function restartGame() {
+                console.log('Restarting game...'); // Debugging
+                score = 0;
+                lives = 3;
+                scoreDisplay.textContent = score;
+                livesDisplay.textContent = lives;
+                resetGame();
+                messageDiv.classList.add('hidden');
+                gameRunning = true;
+                console.log('Game restarted!'); // Debugging
+            }
+            
+            function resetGame() {
+                currentLevel = levelManager.getCurrentLevel();
+                
+                // Reset paddle
+                paddle.width = paddle.originalWidth;
+                paddle.x = GAME_WIDTH / 2 - paddle.width / 2;
+                
+                // Reset ball
+                ball.x = paddle.x + paddle.width / 2;
+                ball.y = paddle.y - ball.radius;
+                ball.dx = 0;
+                ball.dy = 0;
+                ballOnPaddle = true;
+                
+                // Reset powerup state
+                powerupActive = false;
+                powerupTimer = 0;
+            }
+            
+            function launchBall() {
+                if (ballOnPaddle) {
+                    ballOnPaddle = false;
+                    ball.dx = ball.speed * (Math.random() - 0.5);
+                    ball.dy = -ball.speed;
+                    
+                    try {
+                        soundManager.play('hit');
+                    } catch (error) {
+                        console.error('Error playing sound:', error);
+                    }
+                }
+            }
+            
+            function gameLoop() {
+                if (!gameRunning) return;
+                
+                try {
+                    update();
+                    draw();
+                    requestAnimationFrame(gameLoop);
+                } catch (error) {
+                    console.error('Error in game loop:', error);
+                    gameRunning = false;
+                    showErrorMessage('Er is een fout opgetreden in het spel. Probeer het opnieuw.');
+                }
+            }
+            
+            function update() {
+                // Move paddle
+                paddle.x += paddle.dx;
+                
+                // Keep paddle within bounds
+                if (paddle.x < 0) {
+                    paddle.x = 0;
+                } else if (paddle.x + paddle.width > GAME_WIDTH) {
+                    paddle.x = GAME_WIDTH - paddle.width;
+                }
+                
+                // If ball is on paddle, it moves with the paddle
+                if (ballOnPaddle) {
+                    ball.x = paddle.x + paddle.width / 2;
+                    return;
+                }
+                
+                // Move ball
+                ball.x += ball.dx;
+                ball.y += ball.dy;
+                
+                // Ball collision with walls
+                if (ball.x - ball.radius < 0 || ball.x + ball.radius > GAME_WIDTH) {
+                    ball.dx = -ball.dx;
+                    try { soundManager.play('hit'); } catch (e) {}
+                }
+                
+                if (ball.y - ball.radius < 0) {
+                    ball.dy = -ball.dy;
+                    try { soundManager.play('hit'); } catch (e) {}
+                }
+                
+                // Ball lost (bottom of screen)
+                if (ball.y + ball.radius > GAME_HEIGHT) {
+                    lives--;
+                    livesDisplay.textContent = lives;
+                    try { soundManager.play('lose'); } catch (e) {}
+                    
+                    if (lives <= 0) {
+                        gameOver(false);
+                    } else {
+                        ballOnPaddle = true;
+                        ball.x = paddle.x + paddle.width / 2;
+                        ball.y = paddle.y - ball.radius;
+                        ball.dx = 0;
+                        ball.dy = 0;
+                    }
+                }
+                
+                // Ball collision with paddle
+                if (
+                    ball.y + ball.radius > paddle.y &&
+                    ball.y - ball.radius < paddle.y + paddle.height &&
+                    ball.x > paddle.x &&
+                    ball.x < paddle.x + paddle.width
+                ) {
+                    // Calculate ball direction based on where it hit the paddle
+                    const hitPosition = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+                    const angle = hitPosition * Math.PI / 3; // Max 60 degrees
+                    
+                    ball.dx = ball.speed * Math.sin(angle);
+                    ball.dy = -ball.speed * Math.cos(angle);
+                    
+                    try { soundManager.play('hit'); } catch (e) {}
+                }
+                
+                // Ball collision with blocks
+                for (let i = 0; i < currentLevel.blocks.length; i++) {
+                    const block = currentLevel.blocks[i];
+                    
+                    if (
+                        ball.x + ball.radius > block.x &&
+                        ball.x - ball.radius < block.x + block.width &&
+                        ball.y + ball.radius > block.y &&
+                        ball.y - ball.radius < block.y + block.height
+                    ) {
+                        // Determine collision direction
+                        const overlapLeft = ball.x + ball.radius - block.x;
+                        const overlapRight = block.x + block.width - (ball.x - ball.radius);
+                        const overlapTop = ball.y + ball.radius - block.y;
+                        const overlapBottom = block.y + block.height - (ball.y - ball.radius);
+                        
+                        // Find the smallest overlap
+                        const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+                        
+                        // Adjust ball direction based on collision side
+                        if (minOverlap === overlapLeft || minOverlap === overlapRight) {
+                            ball.dx = -ball.dx;
+                        } else {
+                            ball.dy = -ball.dy;
+                        }
+                        
+                        // Reduce block hits
+                        block.hits--;
+                        
+                        // If block is destroyed
+                        if (block.hits <= 0) {
+                            // Add points
+                            score += levelManager.getPointsForBlockType(block.type);
+                            scoreDisplay.textContent = score;
+                            
+                            // Remove block
+                            currentLevel.blocks.splice(i, 1);
+                            
+                            // Special behavior for Dom Tower
+                            if (block.type === 3) {
+                                try { soundManager.play('powerup'); } catch (e) {}
+                            } else {
+                                try { soundManager.play('hit'); } catch (e) {}
+                            }
+                            
+                            // Random chance to spawn a powerup
+                            if (Math.random() < 0.2) {
+                                spawnPowerup(block.x + block.width / 2, block.y + block.height / 2);
+                            }
+                        } else {
+                            try { soundManager.play('hit'); } catch (e) {}
+                        }
+                        
+                        // Only handle one collision per frame
+                        break;
+                    }
+                }
+                
+                // Check for level completion
+                if (currentLevel.blocks.length === 0) {
+                    gameOver(true);
+                }
+                
+                // Update bicycles
+                bicycleSpawnTimer++;
+                if (bicycleSpawnTimer > 300) { // Spawn every ~5 seconds
+                    spawnBicycle();
+                    bicycleSpawnTimer = 0;
+                }
+                
+                for (let i = 0; i < currentLevel.bicycles.length; i++) {
+                    const bicycle = currentLevel.bicycles[i];
+                    bicycle.x += bicycle.dx;
+                    
+                    // Remove bicycle when it goes off screen
+                    if ((bicycle.dx > 0 && bicycle.x > GAME_WIDTH) || 
+                        (bicycle.dx < 0 && bicycle.x + bicycle.width < 0)) {
+                        currentLevel.bicycles.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+                    
+                    // Ball collision with bicycle
+                    if (
+                        ball.x + ball.radius > bicycle.x &&
+                        ball.x - ball.radius < bicycle.x + bicycle.width &&
+                        ball.y + ball.radius > bicycle.y &&
+                        ball.y - ball.radius < bicycle.y + bicycle.height
+                    ) {
+                        // Change ball direction
+                        ball.dy = -ball.dy;
+                        try { soundManager.play('hit'); } catch (e) {}
+                        
+                        // Remove bicycle
+                        currentLevel.bicycles.splice(i, 1);
+                        i--;
+                    }
+                }
+                
+                // Update powerups
+                for (let i = 0; i < currentLevel.powerups.length; i++) {
+                    const powerup = currentLevel.powerups[i];
+                    powerup.y += powerup.dy;
+                    
+                    // Remove powerup when it goes off screen
+                    if (powerup.y > GAME_HEIGHT) {
+                        currentLevel.powerups.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+                    
+                    // Powerup collision with paddle
+                    if (
+                        powerup.x + powerup.width > paddle.x &&
+                        powerup.x < paddle.x + paddle.width &&
+                        powerup.y + powerup.height > paddle.y &&
+                        powerup.y < paddle.y + paddle.height
+                    ) {
+                        // Activate powerup
+                        activatePowerup(powerup.type);
+                        
+                        // Remove powerup
+                        currentLevel.powerups.splice(i, 1);
+                        i--;
+                    }
+                }
+                
+                // Handle active powerup timer
+                if (powerupActive) {
+                    powerupTimer++;
+                    
+                    if (powerupTimer >= POWERUP_DURATION / (1000 / 60)) { // Convert ms to frames
+                        // Deactivate powerup
+                        deactivatePowerup();
+                    }
+                }
+            }
+            
+            function spawnBicycle() {
+                const bicycleHeight = 30;
+                const bicycleWidth = 60;
+                
+                // Randomly decide direction
+                const fromLeft = Math.random() < 0.5;
+                const y = GAME_HEIGHT / 2 - 50 + Math.random() * 100; // Random Y position in middle area
+                
+                const bicycle = {
+                    x: fromLeft ? -bicycleWidth : GAME_WIDTH,
+                    y: y,
+                    width: bicycleWidth,
+                    height: bicycleHeight,
+                    dx: fromLeft ? BICYCLE_SPEED : -BICYCLE_SPEED
+                };
+                
+                currentLevel.bicycles.push(bicycle);
+            }
+            
+            function spawnPowerup(x, y) {
+                const powerupWidth = 30;
+                const powerupHeight = 30;
+                
+                const powerup = {
+                    x: x - powerupWidth / 2,
+                    y: y - powerupHeight / 2,
+                    width: powerupWidth,
+                    height: powerupHeight,
+                    dy: POWERUP_SPEED,
+                    type: 'stroopwafel' // Currently only one type
+                };
+                
+                currentLevel.powerups.push(powerup);
+            }
+            
+            function activatePowerup(type) {
+                try { soundManager.play('powerup'); } catch (e) {}
+                
+                if (type === 'stroopwafel') {
+                    // Enlarge paddle
+                    paddle.width = paddle.originalWidth * 1.5;
+                    paddle.x = Math.min(paddle.x, GAME_WIDTH - paddle.width); // Keep in bounds
+                    powerupActive = true;
+                    powerupTimer = 0;
+                }
+            }
+            
+            function deactivatePowerup() {
+                // Reset paddle size
+                paddle.width = paddle.originalWidth;
+                paddle.x = Math.min(paddle.x, GAME_WIDTH - paddle.width); // Keep in bounds
+                powerupActive = false;
+            }
+            
+            function gameOver(win) {
+                gameRunning = false;
+                messageDiv.classList.remove('hidden');
+                
+                if (win) {
+                    messageText.textContent = 'Je hebt gewonnen! Score: ' + score;
+                    try { soundManager.play('win'); } catch (e) {}
+                } else {
+                    messageText.textContent = 'Game Over! Score: ' + score;
+                    try { soundManager.play('lose'); } catch (e) {}
+                }
+            }
+            
+            function draw() {
+                // Clear canvas
+                ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+                
+                // Draw background
+                if (backgroundImage && backgroundImage.complete && backgroundImage.naturalHeight !== 0) {
+                    ctx.drawImage(backgroundImage, 0, 0, GAME_WIDTH, GAME_HEIGHT);
+                } else {
+                    // Draw a simple fallback background
+                    const isDarkMode = document.body.classList.contains('dark-mode');
+                    
+                    // Sky
+                    ctx.fillStyle = isDarkMode ? '#1a1a2e' : '#87CEEB';
+                    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+                    
+                    // Simple Utrecht skyline
+                    ctx.fillStyle = isDarkMode ? '#2a2a3e' : '#374957';
+                    ctx.beginPath();
+                    ctx.moveTo(0, GAME_HEIGHT - 100);
+                    
+                    // Draw a simple skyline
+                    for (let x = 0; x < GAME_WIDTH; x += 50) {
+                        const height = 50 + Math.random() * 50;
+                        ctx.lineTo(x, GAME_HEIGHT - height);
+                        ctx.lineTo(x + 25, GAME_HEIGHT - height);
+                        ctx.lineTo(x + 25, GAME_HEIGHT - height + 20);
+                        ctx.lineTo(x + 50, GAME_HEIGHT - height + 20);
+                    }
+                    
+                    ctx.lineTo(GAME_WIDTH, GAME_HEIGHT - 50);
+                    ctx.lineTo(GAME_WIDTH, GAME_HEIGHT);
+                    ctx.lineTo(0, GAME_HEIGHT);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // Dom Tower (simplified)
+                    ctx.fillStyle = isDarkMode ? '#3a3a4e' : '#5D6D7E';
+                    ctx.fillRect(GAME_WIDTH / 2 - 15, GAME_HEIGHT - 200, 30, 150);
+                    ctx.beginPath();
+                    ctx.moveTo(GAME_WIDTH / 2 - 15, GAME_HEIGHT - 200);
+                    ctx.lineTo(GAME_WIDTH / 2, GAME_HEIGHT - 230);
+                    ctx.lineTo(GAME_WIDTH / 2 + 15, GAME_HEIGHT - 200);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                
+                // Draw paddle
+                ctx.fillStyle = powerupActive ? '#f39c12' : '#c61f3e'; // Utrecht red, or yellow when powerup active
+                ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+                
+                // Draw ball
+                if (ball.image && ball.image.complete && ball.image.naturalHeight !== 0) {
+                    ctx.drawImage(
+                        ball.image,
+                        ball.x - ball.radius,
+                        ball.y - ball.radius,
+                        ball.radius * 2,
+                        ball.radius * 2
+                    );
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = '#c61f3e'; // Utrecht red
+                    ctx.fill();
+                    ctx.closePath();
+                }
+                
+                // Draw blocks
+                for (const block of currentLevel.blocks) {
+                    // Since we don't have images, use colors for different block types
+                    switch (block.type) {
+                        case 1:
+                            ctx.fillStyle = '#e74c3c'; // Red for canal house 1
+                            break;
+                        case 2:
+                            ctx.fillStyle = '#3498db'; // Blue for canal house 2
+                            break;
+                        case 3:
+                            ctx.fillStyle = '#95a5a6'; // Gray for Dom Tower
+                            break;
+                        default:
+                            ctx.fillStyle = '#2ecc71'; // Green for others
+                    }
+                    
+                    ctx.fillRect(block.x, block.y, block.width, block.height);
+                    
+                    // Draw windows for visual interest
+                    ctx.fillStyle = '#ecf0f1'; // Light color for windows
+                    
+                    if (block.type === 3) { // Dom Tower
+                        // Draw tower windows
+                        ctx.fillRect(block.x + block.width/2 - 5, block.y + 5, 10, 10);
+                        ctx.fillRect(block.x + block.width/2 - 5, block.y + 20, 10, 10);
+                    } else { // Canal houses
+                        // Draw house windows
+                        ctx.fillRect(block.x + 10, block.y + 5, 10, 10);
+                        ctx.fillRect(block.x + block.width - 20, block.y + 5, 10, 10);
+                        
+                        // Draw door
+                        ctx.fillStyle = '#34495e';
+                        ctx.fillRect(block.x + block.width/2 - 5, block.y + block.height - 15, 10, 15);
+                    }
+                }
+                
+                // Draw bicycles
+                for (const bicycle of currentLevel.bicycles) {
+                    // Fallback drawing for bicycles
+                    ctx.fillStyle = '#2c3e50';
+                    
+                    // Wheels
+                    ctx.beginPath();
+                    ctx.arc(bicycle.x + 15, bicycle.y + 15, 10, 0, Math.PI * 2);
+                    ctx.arc(bicycle.x + bicycle.width - 15, bicycle.y + 15, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Frame
+                    ctx.strokeStyle = '#2c3e50';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(bicycle.x + 15, bicycle.y + 15); // Left wheel center
+                    ctx.lineTo(bicycle.x + bicycle.width/2, bicycle.y + 5); // Top of frame
+                    ctx.lineTo(bicycle.x + bicycle.width - 15, bicycle.y + 15); // Right wheel center
+                    ctx.stroke();
+                    
+                    // Handlebars
+                    ctx.beginPath();
+                    ctx.moveTo(bicycle.x + bicycle.width/2, bicycle.y + 5);
+                    ctx.lineTo(bicycle.x + bicycle.width/2, bicycle.y + 15);
+                    ctx.stroke();
+                }
+                
+                // Draw powerups
+                for (const powerup of currentLevel.powerups) {
+                    // Fallback drawing for stroopwafel
+                    ctx.fillStyle = '#e67e22'; // Orange
+                    ctx.beginPath();
+                    ctx.arc(powerup.x + powerup.width/2, powerup.y + powerup.height/2, powerup.width/2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Grid pattern
+                    ctx.strokeStyle = '#d35400'; // Darker orange
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    // Horizontal line
+                    ctx.moveTo(powerup.x + 5, powerup.y + powerup.height/2);
+                    ctx.lineTo(powerup.x + powerup.width - 5, powerup.y + powerup.height/2);
+                    // Vertical line
+                    ctx.moveTo(powerup.x + powerup.width/2, powerup.y + 5);
+                    ctx.lineTo(powerup.x + powerup.width/2, powerup.y + powerup.height - 5);
+                    ctx.stroke();
+                }
+                
+                // If ball is on paddle, show launch instruction
+                if (ballOnPaddle && gameRunning) {
+                    ctx.fillStyle = document.body.classList.contains('dark-mode') ? '#f5f5f5' : '#333';
+                    ctx.font = '16px Roboto, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Druk op spatiebalk om te beginnen', GAME_WIDTH / 2, GAME_HEIGHT / 2);
+                }
+            }
+            
+            console.log('Everything set up! Ready to play.'); // Debugging
+        });
+    </script>
+</body>
+</html>
