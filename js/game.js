@@ -155,20 +155,54 @@ window.onload = function() {
     }
     
     // Event listeners
-    canvas.addEventListener('mousemove', (e) => {
-        const relativeX = e.clientX - canvas.getBoundingClientRect().left;
-        paddle.x = relativeX - paddle.width / 2;
+    function updatePaddlePosition(clientX) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;  // Schaal factor voor correcte positie
+        const relativeX = (clientX - rect.left) * scaleX;
+        
+        // Bereken nieuwe paddle positie
+        let newX = relativeX - paddle.width / 2;
         
         // Houd paddle binnen canvas grenzen
-        if (paddle.x < 0) {
-            paddle.x = 0;
-        } else if (paddle.x + paddle.width > GAME_WIDTH) {
-            paddle.x = GAME_WIDTH - paddle.width;
-        }
+        newX = Math.max(0, Math.min(GAME_WIDTH - paddle.width, newX));
+        
+        // Vloeiende beweging
+        paddle.x = newX;
         
         // Verplaats bal met paddle als het op de paddle is
         if (ballOnPaddle) {
             ball.x = paddle.x + paddle.width / 2;
+        }
+    }
+
+    // Mouse events
+    canvas.addEventListener('mousemove', (e) => {
+        updatePaddlePosition(e.clientX);
+    });
+
+    // Touch events
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault(); // Voorkom scrollen
+        if (e.touches.length > 0) {
+            updatePaddlePosition(e.touches[0].clientX);
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // Voorkom scrollen
+        if (e.touches.length > 0) {
+            updatePaddlePosition(e.touches[0].clientX);
+            // Start het spel als de bal op de paddle staat
+            if (ballOnPaddle && gameRunning) {
+                launchBall();
+            }
+        }
+    }, { passive: false });
+
+    // Voeg click event toe voor het starten van het spel (alleen voor desktop)
+    canvas.addEventListener('click', (e) => {
+        if (ballOnPaddle && gameRunning) {
+            launchBall();
         }
     });
     
@@ -708,7 +742,7 @@ window.onload = function() {
             // Check if device is mobile
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             const instructionText = isMobile ? 
-                'DRUK OP START OM TE BEGINNEN!' : 
+                'TIK OP HET VELD OM TE BEGINNEN!' : 
                 'DRUK OP SPATIE OM TE BEGINNEN!';
             
             // Draw background
