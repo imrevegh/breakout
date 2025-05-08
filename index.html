@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utrecht Breakout</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>Utrecht Breakout</h1>
+            <div class="game-info">
+                <span class="score">Score: <span id="score">0</span></span>
+                <span class="lives">Levens: <span id="lives">3</span></span>
+            </div>
+            <div class="game-controls">
+                <button id="start-button" onclick="window.utrechtBreakout?.startGame()">Start Spel</button>
+                <button id="restart-button" class="hidden" onclick="window.utrechtBreakout?.restartGame()">Opnieuw Spelen</button>
+                <div class="toggle-container">
+                    <label class="switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="toggle-label">🌙 / ☀️</span>
+                </div>
+                <button id="mute-button">🔊</button>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="game-message" class="hidden">
+            <h2 id="message-text"></h2>
+            <button id="message-button" onclick="window.utrechtBreakout?.restartGame()">Opnieuw Spelen</button>
+        </div>
+        
+        <div class="game-instructions">
+            <h3>Instructies:</h3>
+            <p>Gebruik de muis om de paddle te bewegen. Druk op spatiebalk om de bal te lanceren.</p>
+            <p>Breek alle Utrechtse panden en vermijd de fietsen!</p>
+            <p>De Domtoren geeft extra punten en stroopwafels maken je paddle groter.</p>
+        </div>
+    </div>
+    
+    <!-- Scripts laden met opzettelijke volgorde -->
+    <script src="js/sounds.js"></script>
+    <script src="js/levels.js"></script>
+    <script src="js/game.js"></script>
+    
+    <!-- Fallback als de scripts niet direct geladen zijn -->
+    <script>
+        window.addEventListener('load', function() {
+            console.log("Window load event triggered");
+            
+            // Check of het spel correct is geïnitialiseerd
+            if (!window.utrechtBreakout) {
+                console.log("Game not initialized correctly, setting up fallback");
+                
+                // Stel een fallback startfunctie in
+                document.getElementById('start-button').addEventListener('click', function() {
+                    console.log("Start button clicked (fallback)");
+                    // Zoek naar de startGame functie in de scope
+                    if (typeof startGame === 'function') {
+                        startGame();
+                    } else {
+                        console.error("Could not find startGame function");
+                        alert("Er is een probleem met het starten van het spel. Open de browser console voor details.");
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
