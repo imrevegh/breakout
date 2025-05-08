@@ -704,6 +704,71 @@
             let powerupActive = false;
             let powerupTimer = 0;
 
+            // Pre-generate static background elements for fallback
+            const fallbackBackground = {
+                isDarkMode: false,
+                skylinePoints: generateSkylinePoints(),
+                generated: false
+            };
+
+            // Function to generate static skyline points once
+            function generateSkylinePoints() {
+                const points = [];
+                for (let x = 0; x < GAME_WIDTH; x += 50) {
+                    const height = 50 + Math.random() * 50;
+                    points.push({
+                        x: x,
+                        height: height
+                    });
+                }
+                return points;
+            }
+
+            // Function to draw static skyline
+            function drawStaticSkyline(isDarkMode) {
+                // Update dark mode flag if changed
+                if (fallbackBackground.isDarkMode !== isDarkMode) {
+                    fallbackBackground.isDarkMode = isDarkMode;
+                }
+
+                // Sky
+                ctx.fillStyle = isDarkMode ? '#1a1a2e' : '#87CEEB';
+                ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+                
+                // Simple Utrecht skyline
+                ctx.fillStyle = isDarkMode ? '#2a2a3e' : '#374957';
+                ctx.beginPath();
+                ctx.moveTo(0, GAME_HEIGHT - 100);
+                
+                // Draw a simple skyline using pre-generated points
+                for (let i = 0; i < fallbackBackground.skylinePoints.length; i++) {
+                    const point = fallbackBackground.skylinePoints[i];
+                    const x = point.x;
+                    const height = point.height;
+                    
+                    ctx.lineTo(x, GAME_HEIGHT - height);
+                    ctx.lineTo(x + 25, GAME_HEIGHT - height);
+                    ctx.lineTo(x + 25, GAME_HEIGHT - height + 20);
+                    ctx.lineTo(x + 50, GAME_HEIGHT - height + 20);
+                }
+                
+                ctx.lineTo(GAME_WIDTH, GAME_HEIGHT - 50);
+                ctx.lineTo(GAME_WIDTH, GAME_HEIGHT);
+                ctx.lineTo(0, GAME_HEIGHT);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Dom Tower (simplified)
+                ctx.fillStyle = isDarkMode ? '#3a3a4e' : '#5D6D7E';
+                ctx.fillRect(GAME_WIDTH / 2 - 15, GAME_HEIGHT - 200, 30, 150);
+                ctx.beginPath();
+                ctx.moveTo(GAME_WIDTH / 2 - 15, GAME_HEIGHT - 200);
+                ctx.lineTo(GAME_WIDTH / 2, GAME_HEIGHT - 230);
+                ctx.lineTo(GAME_WIDTH / 2 + 15, GAME_HEIGHT - 200);
+                ctx.closePath();
+                ctx.fill();
+            }
+
             console.log('Creating game elements...'); // Debugging
             
             // Game objects
@@ -1197,42 +1262,9 @@
                 if (backgroundImage && backgroundImage.complete && backgroundImage.naturalHeight !== 0) {
                     ctx.drawImage(backgroundImage, 0, 0, GAME_WIDTH, GAME_HEIGHT);
                 } else {
-                    // Draw a simple fallback background
+                    // Draw the static fallback background
                     const isDarkMode = document.body.classList.contains('dark-mode');
-                    
-                    // Sky
-                    ctx.fillStyle = isDarkMode ? '#1a1a2e' : '#87CEEB';
-                    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-                    
-                    // Simple Utrecht skyline
-                    ctx.fillStyle = isDarkMode ? '#2a2a3e' : '#374957';
-                    ctx.beginPath();
-                    ctx.moveTo(0, GAME_HEIGHT - 100);
-                    
-                    // Draw a simple skyline
-                    for (let x = 0; x < GAME_WIDTH; x += 50) {
-                        const height = 50 + Math.random() * 50;
-                        ctx.lineTo(x, GAME_HEIGHT - height);
-                        ctx.lineTo(x + 25, GAME_HEIGHT - height);
-                        ctx.lineTo(x + 25, GAME_HEIGHT - height + 20);
-                        ctx.lineTo(x + 50, GAME_HEIGHT - height + 20);
-                    }
-                    
-                    ctx.lineTo(GAME_WIDTH, GAME_HEIGHT - 50);
-                    ctx.lineTo(GAME_WIDTH, GAME_HEIGHT);
-                    ctx.lineTo(0, GAME_HEIGHT);
-                    ctx.closePath();
-                    ctx.fill();
-                    
-                    // Dom Tower (simplified)
-                    ctx.fillStyle = isDarkMode ? '#3a3a4e' : '#5D6D7E';
-                    ctx.fillRect(GAME_WIDTH / 2 - 15, GAME_HEIGHT - 200, 30, 150);
-                    ctx.beginPath();
-                    ctx.moveTo(GAME_WIDTH / 2 - 15, GAME_HEIGHT - 200);
-                    ctx.lineTo(GAME_WIDTH / 2, GAME_HEIGHT - 230);
-                    ctx.lineTo(GAME_WIDTH / 2 + 15, GAME_HEIGHT - 200);
-                    ctx.closePath();
-                    ctx.fill();
+                    drawStaticSkyline(isDarkMode);
                 }
                 
                 // Draw paddle
