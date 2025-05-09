@@ -812,7 +812,7 @@ window.onload = function() {
         ctx.fillStyle = '#c61f3e'; // Utrecht rood
         ctx.font = 'bold 40px "Fredoka One", Arial Rounded MT Bold, Arial, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('Utrecht Breakout Challenge', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50);
+        ctx.fillText('Utrecht Breakout voor Erik-Sander!', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50);
         
         // Instructies
         ctx.fillStyle = '#003366'; // Utrecht blauw
