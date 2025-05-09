@@ -11,18 +11,18 @@ class LevelManager {
         
         // Block types met VOLLEDIG ANDERE KLEUREN
         this.blockTypes = {
-            1: { // Regular canal house type 1 - NU FEL GROEN
-                color: '#4CAF50', // Fel groen
+            1: { // Regular canal house type 1
+                color: '#FF6B6B', // Fel rood
                 points: 10,
                 hits: 1
             },
             2: { // Regular canal house type 2
-                color: '#FFEB3B', // Fel geel
+                color: '#FFD93D', // Fel geel
                 points: 15,
                 hits: 1
             },
             3: { // Dom Tower (special block)
-                color: '#9C27B0', // Paars
+                color: '#9B59B6', // Paars
                 points: 50,
                 hits: 2
             }
@@ -45,18 +45,18 @@ class LevelManager {
         const marginX = 32;
         const marginY = 48;
         // Contrasterend kleurenpalet
-        const utrechtColors = [
-            '#B52A00', // fel baksteenrood
-            '#1A237E', // donkerblauw
-            '#FFD600', // fel geel
-            '#388E3C', // donkergroen
-            '#F44336', // fel rood
-            '#212121', // bijna zwart
-            '#FF9800', // oranje
-            '#1976D2', // helder blauw
-            '#E91E63', // fel roze
-            '#4CAF50', // helder groen
-            '#FFF'     // wit
+        const circusColors = [
+            '#FF6B6B', // Fel rood
+            '#4ECDC4', // Turquoise
+            '#FFD93D', // Fel geel
+            '#9B59B6', // Paars
+            '#2ECC71', // Fel groen
+            '#FF9F1C', // Oranje
+            '#E74C3C', // Donker rood
+            '#3498DB', // Blauw
+            '#F1C40F', // Geel
+            '#1ABC9C', // Turquoise
+            '#E67E22'  // Oranje
         ];
         const totalWidth = cols * blockWidth + (cols - 1) * spacing;
         // Zorg dat alles binnen het canvas past
@@ -72,7 +72,7 @@ class LevelManager {
                 let type = 1;
                 if (row === 0 && (col === 2 || col === cols - 3)) type = 3;
                 else if (row < 2) type = 2;
-                const color = utrechtColors[(col + row) % utrechtColors.length];
+                const color = circusColors[(col + row) % circusColors.length];
                 const x = startX + col * (scaledBlockWidth + scaledSpacing);
                 const y = startY + row * (blockHeight + vSpacing);
                 blocks.push(this.createBlock(x, y, type, color, scaledBlockWidth, blockHeight, gevelHeight));

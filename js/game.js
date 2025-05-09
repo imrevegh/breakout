@@ -648,7 +648,7 @@ window.onload = function() {
         const showDebugLines = false; // Debug lijnen UIT
         
         // Draw paddle
-        ctx.fillStyle = powerupActive ? '#f39c12' : '#c61f3e'; // Utrecht red, or yellow when powerup active
+        ctx.fillStyle = powerupActive ? '#FFD93D' : '#FF6B6B'; // Fel rood, of geel wanneer powerup actief
         ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
         
         // Draw ball
@@ -669,7 +669,7 @@ window.onload = function() {
         } else {
             ctx.beginPath();
             ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-            ctx.fillStyle = '#c61f3e'; // Utrecht red
+            ctx.fillStyle = '#4ECDC4'; // Turquoise
             ctx.fill();
             ctx.closePath();
         }
